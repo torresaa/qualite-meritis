@@ -6,4 +6,4 @@ Meritis - Share your code!
 - Checkout your branch
 - Create a folder with your name (Ex. Aquiles)
 - Put your code inside
-- Push and create merge request
+- Push and create Pull Request
