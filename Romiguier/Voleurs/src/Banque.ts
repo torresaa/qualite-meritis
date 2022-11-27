@@ -23,4 +23,8 @@ export class Banque {
     get lesCoffresEnCoursDOuverture() {
         return this._coffres.filter(c => c.estEnCoursDOuverture);
     }
+
+    get tousLesCoffresNeSontPasEncoreOuverts() {
+        return !(this.lesCoffresOuverts.length === this.tousLesCoffres.length);
+    }
 }

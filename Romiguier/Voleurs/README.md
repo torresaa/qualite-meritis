@@ -2,5 +2,7 @@
 All the exercize scenarii are in **`Casse.spec.ts`**
 ## install
 `npm install`
-## run tests
+## run all tests
 `npm run test`
+## run exercize scenarii
+`npm run casserLaBanque`

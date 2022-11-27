@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "casserLaBanque": "jest -t casse --verbose"
   },
   "devDependencies": {
     "@jest/globals": "^29.3.1",

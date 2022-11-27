@@ -12,7 +12,7 @@ export class Casse {
       this._tempsDuCasse++;
       this.assignerLesCoffresAuxVoleursNonOccupes();
       this.testerLesCombinaisons();
-    } while (this.banque.lesCoffresEnCoursDOuverture.length > 0);
+    } while (this.banque.tousLesCoffresNeSontPasEncoreOuverts);
   }
   assignerLesCoffresAuxVoleursNonOccupes() {
     if (this.banque.lesCoffresFermes.length > 0) {

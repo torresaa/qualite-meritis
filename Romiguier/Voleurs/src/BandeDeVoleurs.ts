@@ -2,7 +2,7 @@ import { Voleur } from "./Voleur";
 
 export class BandeDeVoleurs {
     private _voleurs: Voleur[] = [];
-    constructor(nombreDeVoleurs:number) {
+    constructor(nombreDeVoleurs:number = 1) {
         for(let i=0; i<nombreDeVoleurs;i++) {
             this._voleurs.push(new Voleur());
         }
