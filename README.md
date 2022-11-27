@@ -1,6 +1,8 @@
 # qualite-meritis
 Meritis - Share your code!
 
+NOTE: Share your github user in Teams, you need to be ivited to repo first.
+
 - Clone repository
 - Create a feature branch with your name/user (Ex. feature/torresaa)
 - Checkout your branch
