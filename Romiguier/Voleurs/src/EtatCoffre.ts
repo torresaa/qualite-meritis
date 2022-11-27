@@ -1,0 +1,1 @@
+export type EtatCoffre = "ouvert" | "en cours d'ouverture" | "fermé";
