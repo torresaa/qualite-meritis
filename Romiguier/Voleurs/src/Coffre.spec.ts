@@ -4,40 +4,31 @@ describe("Coffre tests", () => {
       test("un coffre doit être créé avec un nombre de combinaisons possibles", () => {
         const nombreDePositions = 5;
         const nombreDeSymboles = 4;
-        const coffre = new Coffre({id: 1,nombreDePositions, nombreDeSymboles});
+        const coffre = new Coffre({nombreDePositions, nombreDeSymboles});
         expect(coffre.nombreDeCombinaisonsRestantes).toBe(Math.pow(4,5));
     })
 
     test("un coffre est initialement fermé", () => {
-        const nombreDePositions = 5;
-        const nombreDeSymboles = 4;
-        const coffre = new Coffre({id: 1, nombreDePositions, nombreDeSymboles});
+        const nombreDePositions = 1;
+        const nombreDeSymboles = 2;
+        const coffre = new Coffre({ nombreDePositions, nombreDeSymboles});
         expect(coffre.estFerme).toBeTruthy();
     })
 
-    test("un coffre peut être en cours d'ouverture", () => {
-        const nombreDePositions = 5;
-        const nombreDeSymboles = 4;
-        const coffre = new Coffre({id: 1,nombreDePositions, nombreDeSymboles});
-        coffre.reserver();
-        expect(coffre.estEnCoursDOuverture).toBeTruthy();
-    })
-
-    test("un coffre peut être ouvert", () => {
+    test("un coffre est ouvert après l'avoir hacké", () => {
         const nombreDePositions = 1;
         const nombreDeSymboles = 2;
-        const coffre = new Coffre({id:1, nombreDePositions, nombreDeSymboles});
-        coffre.testeCombinaison();
-        coffre.testeCombinaison();
-        expect(coffre.estOuvert).toBeTruthy();
+        const coffre = new Coffre({ nombreDePositions, nombreDeSymboles});
+        coffre.ouvre();
+        expect(coffre.estFerme).toBeFalsy();
     })
 
-    test("si on teste une combinaison sur un coffre alors son nombre restant de combinaisons doit être diminué de 1", () => {
+    test("si un coffre est hacké alors on obtient le temps passé à l'avoir hacké", () => {
         const nombreDePositions = 1;
         const nombreDeSymboles = 2;
-        const coffre = new Coffre({id:1, nombreDePositions, nombreDeSymboles});
-        const nombreInitialDeCombinaisonsRestantes = coffre.nombreDeCombinaisonsRestantes;
-        coffre.testeCombinaison();
-        expect(coffre.nombreDeCombinaisonsRestantes).toBe(nombreInitialDeCombinaisonsRestantes-1);
+        const coffre = new Coffre({ nombreDePositions, nombreDeSymboles});
+        const nombreTotalDeCombinaisons = coffre.nombreDeCombinaisonsRestantes;
+        const tempsPasse =  coffre.ouvre();
+        expect(tempsPasse).toBe(nombreTotalDeCombinaisons);
     })
 })
