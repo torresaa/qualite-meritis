@@ -1,5 +1,6 @@
 package fr.vergne.qualitemeritis;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -7,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -26,7 +28,7 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats);
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -53,7 +55,7 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(1);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats);
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
@@ -71,7 +73,7 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(10);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats);
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice.minus(1), targetPrice.plus(1));
@@ -83,9 +85,29 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(Arrays.asList(targetSeat), bestSeats);
 	}
 
+	@Test
+	void testDoesNotReturnBookedSeat() {
+		// GIVEN
+		Price price = Price.euros(5);
+		List<Seat> allSeats = Arrays.asList(new Seat(price));
+		Predicate<Seat> freeSeatPredicate = seat -> false;
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+
+		// THEN
+		assertEquals(emptyList(), bestSeats);
+	}
+
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
 		int[] nextValue = { 0 };
 		return () -> Price.euros(nextValue[0] += increment);
+	}
+
+	private static Predicate<Seat> nothingBooked() {
+		return seat -> true;
 	}
 
 	enum Currency {
@@ -178,15 +200,17 @@ class OfferBestSeatsInPriceRangeTest {
 	static class SuggestionSystem {
 
 		private final List<Seat> seats;
+		private final Predicate<Seat> freeSeatPredicate;
 
-		public SuggestionSystem(List<Seat> seats) {
+		public SuggestionSystem(List<Seat> seats, Predicate<Seat> freeSeatPredicate) {
 			this.seats = seats;
+			this.freeSeatPredicate = freeSeatPredicate;
 		}
 
 		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
 			List<Seat> satisfyingSeats = new LinkedList<>();
 			for (Seat seat : seats) {
-				if (priceRange.includes(seat.price())) {
+				if (freeSeatPredicate.test(seat) && priceRange.includes(seat.price())) {
 					satisfyingSeats.add(seat);
 				}
 			}
