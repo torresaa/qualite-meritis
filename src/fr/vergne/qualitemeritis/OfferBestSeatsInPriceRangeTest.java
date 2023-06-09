@@ -25,6 +25,22 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(Arrays.asList(seat), bestSeats);
 	}
 
+	@Test
+	void testReturnsOnlyAvailableTwoSeatsWithExactlyMatchingPriceRange() {
+		// GIVEN
+		Price price = new Price();
+		Seat seat1 = new Seat(price);
+		Seat seat2 = new Seat(price);
+		SuggestionSystem system = new SuggestionSystem(seat1, seat2);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+
+		// THEN
+		assertEquals(Arrays.asList(seat1, seat2), bestSeats);
+	}
+
 	static class Price {
 	}
 
@@ -59,7 +75,7 @@ class OfferBestSeatsInPriceRangeTest {
 		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
 			for (Seat seat : seats) {
 				if (priceRange.includes(seat.price())) {
-					return Arrays.asList(seat);
+					return Arrays.asList(seats);
 				}
 			}
 			return emptyList();
