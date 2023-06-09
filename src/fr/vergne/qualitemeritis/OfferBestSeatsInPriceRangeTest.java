@@ -14,23 +14,19 @@ class OfferBestSeatsInPriceRangeTest {
 	@Test
 	void testReturnsOnlyAvailableSeatWithExactlyMatchingPriceRange() {
 		int seatsCount = 1;
-		Price price = new Price();
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(price, allSeats);
+		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(seatsCount);
 	}
 
 	@Test
 	void testReturnsOnlyAvailableTwoSeatsWithExactlyMatchingPriceRange() {
 		int seatsCount = 2;
-		Price price = new Price();
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(price, allSeats);
+		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(seatsCount);
 	}
 
-	private void testReturnsAllSeatsAssumingExactlyMatchingPriceRange(Price price, List<Seat> allSeats) {
+	private void testReturnsAllSeatsAssumingExactlyMatchingPriceRange(int seatsCount) {
 		// GIVEN
+		Price price = new Price();
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
 		SuggestionSystem system = new SuggestionSystem(allSeats);
 		PriceRange priceRange = new PriceRange(price, price);
 
