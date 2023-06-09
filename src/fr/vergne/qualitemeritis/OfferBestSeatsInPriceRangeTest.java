@@ -51,7 +51,7 @@ class OfferBestSeatsInPriceRangeTest {
 	@MethodSource("seatsCountAndIndex")
 	void testReturnsOnlySeatMatchingPriceRange(int seatIndex, int seatsCount) {
 		// GIVEN
-		Supplier<Price> priceSupplier = createPriceSupplier();
+		Supplier<Price> priceSupplier = createIncrementingPricesPer(1);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
 		SuggestionSystem system = new SuggestionSystem(allSeats);
 		Seat targetSeat = allSeats.get(seatIndex - 1);
@@ -65,9 +65,27 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(Arrays.asList(targetSeat), bestSeats);
 	}
 
-	private static Supplier<Price> createPriceSupplier() {
+	@ParameterizedTest(name = "seat {0} in {1}")
+	@MethodSource("seatsCountAndIndex")
+	void testReturnsOnlySeatWithinPriceRange(int seatIndex, int seatsCount) {
+		// GIVEN
+		Supplier<Price> priceSupplier = createIncrementingPricesPer(10);
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
+		SuggestionSystem system = new SuggestionSystem(allSeats);
+		Seat targetSeat = allSeats.get(seatIndex - 1);
+		Price targetPrice = targetSeat.price();
+		PriceRange priceRange = new PriceRange(targetPrice.minus(1), targetPrice.plus(1));
+
+		// WHEN
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+
+		// THEN
+		assertEquals(Arrays.asList(targetSeat), bestSeats);
+	}
+
+	private static Supplier<Price> createIncrementingPricesPer(int increment) {
 		int[] nextValue = { 0 };
-		return () -> Price.euros(nextValue[0]++);
+		return () -> Price.euros(nextValue[0] += increment);
 	}
 
 	enum Currency {
@@ -94,6 +112,14 @@ class OfferBestSeatsInPriceRangeTest {
 			this.currency = currency;
 		}
 
+		public Price minus(int delta) {
+			return new Price(value - delta, currency);
+		}
+
+		public Price plus(int delta) {
+			return new Price(value + delta, currency);
+		}
+
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj) {
@@ -109,11 +135,6 @@ class OfferBestSeatsInPriceRangeTest {
 		@Override
 		public int hashCode() {
 			return value * currency.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return "" + value + currency;
 		}
 
 		public static Price euros(int value) {
@@ -136,15 +157,18 @@ class OfferBestSeatsInPriceRangeTest {
 
 	static class PriceRange {
 
-		private final Price price;
+		private final Price priceMin;
+		private final Price priceMax;
 
-		public PriceRange(Price price, Price price2) {
-			this.price = price;
+		public PriceRange(Price priceMin, Price priceMax) {
+			this.priceMin = priceMin;
+			this.priceMax = priceMax;
 		}
 
 		public boolean includes(Price price) {
-			if (this.price.currency == price.currency) {
-				return this.price.value == price.value;
+			if (this.priceMin.currency == price.currency) {
+				return this.priceMin.value <= price.value//
+						&& this.priceMax.value >= price.value;
 			} else {
 				return false;
 			}
