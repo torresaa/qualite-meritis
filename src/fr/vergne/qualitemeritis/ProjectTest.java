@@ -12,11 +12,16 @@ class ProjectTest {
 
 	@Test
 	void test() {
+		// GIVEN
 		Price price = new Price();
 		Seat seat = new Seat(price);
 		SuggestionSystem system = new SuggestionSystem(seat);
 		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
 		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+
+		// THEN
 		assertEquals(Arrays.asList(seat), bestSeats);
 	}
 
