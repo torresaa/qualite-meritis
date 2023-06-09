@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,14 +16,15 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Price price = new Price();
 		Seat seat = new Seat(price);
-		SuggestionSystem system = new SuggestionSystem(seat);
+		List<Seat> allSeats = Arrays.asList(seat);
+		SuggestionSystem system = new SuggestionSystem(allSeats);
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
 		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
 
 		// THEN
-		assertEquals(Arrays.asList(seat), bestSeats);
+		assertEquals(allSeats, bestSeats);
 	}
 
 	@Test
@@ -31,14 +33,15 @@ class OfferBestSeatsInPriceRangeTest {
 		Price price = new Price();
 		Seat seat1 = new Seat(price);
 		Seat seat2 = new Seat(price);
-		SuggestionSystem system = new SuggestionSystem(seat1, seat2);
+		List<Seat> allSeats = Arrays.asList(seat1, seat2);
+		SuggestionSystem system = new SuggestionSystem(allSeats);
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
 		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
 
 		// THEN
-		assertEquals(Arrays.asList(seat1, seat2), bestSeats);
+		assertEquals(allSeats, bestSeats);
 	}
 
 	static class Price {
@@ -66,16 +69,16 @@ class OfferBestSeatsInPriceRangeTest {
 
 	static class SuggestionSystem {
 
-		private final Seat[] seats;
+		private final List<Seat> seats;
 
-		public SuggestionSystem(Seat... seats) {
+		public SuggestionSystem(List<Seat> seats) {
 			this.seats = seats;
 		}
 
 		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
 			for (Seat seat : seats) {
 				if (priceRange.includes(seat.price())) {
-					return Arrays.asList(seats);
+					return seats;
 				}
 			}
 			return emptyList();
