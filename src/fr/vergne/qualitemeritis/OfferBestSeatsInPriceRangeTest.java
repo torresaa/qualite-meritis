@@ -12,15 +12,12 @@ import org.junit.jupiter.api.Test;
 class OfferBestSeatsInPriceRangeTest {
 
 	@Test
-	void testReturnsOnlyAvailableSeatWithExactlyMatchingPriceRange() {
-		int seatsCount = 1;
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(seatsCount);
-	}
-
-	@Test
-	void testReturnsOnlyAvailableTwoSeatsWithExactlyMatchingPriceRange() {
-		int seatsCount = 2;
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(seatsCount);
+	void testReturnsAllSeatsAssumingExactlyMatchingPriceRange() {
+		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(1);
+		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(2);
+		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(5);
+		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(10);
+		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(100);
 	}
 
 	private void testReturnsAllSeatsAssumingExactlyMatchingPriceRange(int seatsCount) {
