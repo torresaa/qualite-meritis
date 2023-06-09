@@ -1,10 +1,11 @@
 package fr.vergne.qualitemeritis;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -34,26 +35,49 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(allSeats, bestSeats);
 	}
 
+	@ParameterizedTest(name = "{0} seats")
+	@MethodSource("seatsCount")
+	void testReturnsOnlySeatMatchingPriceRange(int seatsCount) {
+		// GIVEN
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(new Price())).toList();
+		SuggestionSystem system = new SuggestionSystem(allSeats);
+		Seat targetSeat = allSeats.get(0);
+		Price targetPrice = targetSeat.price();
+		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
+
+		// WHEN
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+
+		// THEN
+		assertEquals(Arrays.asList(targetSeat), bestSeats);
+	}
+
 	static class Price {
 	}
 
 	static class Seat {
 
+		private final Price price;
+
 		public Seat(Price price) {
+			this.price = price;
 		}
 
-		public Object price() {
-			return null;
+		public Price price() {
+			return price;
 		}
 	}
 
 	static class PriceRange {
 
+		private final Price price;
+
 		public PriceRange(Price price, Price price2) {
+			this.price = price;
 		}
 
-		public boolean includes(Object price) {
-			return true;
+		public boolean includes(Price price) {
+			return this.price.equals(price);
 		}
 	}
 
@@ -66,12 +90,13 @@ class OfferBestSeatsInPriceRangeTest {
 		}
 
 		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
+			List<Seat> satisfyingSeats = new LinkedList<>();
 			for (Seat seat : seats) {
 				if (priceRange.includes(seat.price())) {
-					return seats;
+					satisfyingSeats.add(seat);
 				}
 			}
-			return emptyList();
+			return satisfyingSeats;
 		}
 	}
 }
