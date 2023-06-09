@@ -1,5 +1,6 @@
 package fr.vergne.qualitemeritis;
 
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
@@ -19,9 +20,17 @@ class ProjectTest {
 	}
 
 	static class Seat {
+
+		public Object price() {
+			return null;
+		}
 	}
 
 	static class PriceRange {
+
+		public boolean includes(Object price) {
+			return true;
+		}
 	}
 
 	static class SuggestionSystem {
@@ -33,7 +42,11 @@ class ProjectTest {
 		}
 
 		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
-			return Arrays.asList(seat);
+			if (priceRange.includes(seat.price())) {
+				return Arrays.asList(seat);
+			} else {
+				return emptyList();
+			}
 		}
 	}
 }
