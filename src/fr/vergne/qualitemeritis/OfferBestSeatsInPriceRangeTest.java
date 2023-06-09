@@ -8,10 +8,10 @@ import java.util.Collection;
 
 import org.junit.jupiter.api.Test;
 
-class ProjectTest {
+class OfferBestSeatsInPriceRangeTest {
 
 	@Test
-	void testOfferBestSeatsInReturnsOnlyAvailableSeatWithExactlyMatchingPriceRange() {
+	void testReturnsOnlyAvailableSeatWithExactlyMatchingPriceRange() {
 		// GIVEN
 		Price price = new Price();
 		Seat seat = new Seat(price);
