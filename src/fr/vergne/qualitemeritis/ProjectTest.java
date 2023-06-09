@@ -8,6 +8,9 @@ class ProjectTest {
 
 	@Test
 	void test() {
+		SuggestionSystem system = new SuggestionSystem();
 	}
 
+	static class SuggestionSystem {
+	}
 }
