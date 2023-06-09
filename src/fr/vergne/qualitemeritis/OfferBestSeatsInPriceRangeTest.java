@@ -35,13 +35,24 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(allSeats, bestSeats);
 	}
 
-	@ParameterizedTest(name = "{0} seats")
-	@MethodSource("seatsCount")
-	void testReturnsOnlySeatMatchingPriceRange(int seatsCount) {
+	static Stream<Object[]> seatsCountAndIndex() {
+		// The index is one-based to offer a better report readability
+		return seatsCount().flatMap(count -> {
+			return Stream.of(//
+					new Object[] { 1, count }, // first seat
+					new Object[] { (count + 1) / 2, count }, // middle seat
+					new Object[] { count, count }// last seat
+			);
+		});
+	}
+
+	@ParameterizedTest(name = "seat {0} in {1}")
+	@MethodSource("seatsCountAndIndex")
+	void testReturnsOnlySeatMatchingPriceRange(int seatIndex, int seatsCount) {
 		// GIVEN
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(new Price())).toList();
 		SuggestionSystem system = new SuggestionSystem(allSeats);
-		Seat targetSeat = allSeats.get(0);
+		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
 
