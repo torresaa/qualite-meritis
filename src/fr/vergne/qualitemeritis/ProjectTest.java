@@ -11,15 +11,19 @@ class ProjectTest {
 	@Test
 	void test() {
 		SuggestionSystem system = new SuggestionSystem();
-		Collection<Seat> bestSeats = system.offerBestSeats();
+		PriceRange priceRange = new PriceRange();
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
 	}
 
 	static class Seat {
 	}
 
+	static class PriceRange {
+	}
+
 	static class SuggestionSystem {
 
-		public Collection<Seat> offerBestSeats() {
+		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
 			// TODO
 			return null;
 		}
