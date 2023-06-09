@@ -6,21 +6,21 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class OfferBestSeatsInPriceRangeTest {
 
-	@Test
-	void testReturnsAllSeatsAssumingExactlyMatchingPriceRange() {
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(1);
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(2);
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(5);
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(10);
-		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(100);
+	static Stream<Integer> seatsCount() {
+		return Stream.of(1, 2, 5, 10, 100);
 	}
 
-	private void testReturnsAllSeatsAssumingExactlyMatchingPriceRange(int seatsCount) {
+	@ParameterizedTest(name = "{0} seats")
+	@MethodSource("seatsCount")
+	void testReturnsAllSeatsAssumingExactlyMatchingPriceRange(int seatsCount) {
 		// GIVEN
 		Price price = new Price();
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
