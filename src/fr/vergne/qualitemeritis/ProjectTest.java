@@ -9,8 +9,13 @@ class ProjectTest {
 	@Test
 	void test() {
 		SuggestionSystem system = new SuggestionSystem();
+		system.offerBestSeats();
 	}
 
 	static class SuggestionSystem {
+
+		public void offerBestSeats() {
+			// TODO
+		}
 	}
 }
