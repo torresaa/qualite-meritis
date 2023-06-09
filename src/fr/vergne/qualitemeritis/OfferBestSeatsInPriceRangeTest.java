@@ -1,9 +1,9 @@
 package fr.vergne.qualitemeritis;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -13,19 +13,18 @@ class OfferBestSeatsInPriceRangeTest {
 
 	@Test
 	void testReturnsOnlyAvailableSeatWithExactlyMatchingPriceRange() {
+		int seatsCount = 1;
 		Price price = new Price();
-		Seat seat = new Seat(price);
-		List<Seat> allSeats = Arrays.asList(seat);
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
 
 		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(price, allSeats);
 	}
 
 	@Test
 	void testReturnsOnlyAvailableTwoSeatsWithExactlyMatchingPriceRange() {
+		int seatsCount = 2;
 		Price price = new Price();
-		Seat seat1 = new Seat(price);
-		Seat seat2 = new Seat(price);
-		List<Seat> allSeats = Arrays.asList(seat1, seat2);
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
 
 		testReturnsAllSeatsAssumingExactlyMatchingPriceRange(price, allSeats);
 	}
