@@ -13,10 +13,11 @@ class OfferBestSeatsInPriceRangeTest {
 
 	@Test
 	void testReturnsOnlyAvailableSeatWithExactlyMatchingPriceRange() {
-		// GIVEN
 		Price price = new Price();
 		Seat seat = new Seat(price);
 		List<Seat> allSeats = Arrays.asList(seat);
+
+		// GIVEN
 		SuggestionSystem system = new SuggestionSystem(allSeats);
 		PriceRange priceRange = new PriceRange(price, price);
 
@@ -29,11 +30,12 @@ class OfferBestSeatsInPriceRangeTest {
 
 	@Test
 	void testReturnsOnlyAvailableTwoSeatsWithExactlyMatchingPriceRange() {
-		// GIVEN
 		Price price = new Price();
 		Seat seat1 = new Seat(price);
 		Seat seat2 = new Seat(price);
 		List<Seat> allSeats = Arrays.asList(seat1, seat2);
+
+		// GIVEN
 		SuggestionSystem system = new SuggestionSystem(allSeats);
 		PriceRange priceRange = new PriceRange(price, price);
 
