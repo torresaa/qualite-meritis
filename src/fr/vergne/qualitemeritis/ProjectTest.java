@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class ProjectTest {
 
 	@Test
-	void test() {
+	void testOfferBestSeatsInReturnsOnlyAvailableSeatWithExactlyMatchingPriceRange() {
 		// GIVEN
 		Price price = new Price();
 		Seat seat = new Seat(price);
