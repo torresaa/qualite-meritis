@@ -50,18 +50,19 @@ class OfferBestSeatsInPriceRangeTest {
 
 	static class SuggestionSystem {
 
-		private final Seat seat;
+		private final Seat[] seats;
 
-		public SuggestionSystem(Seat seat) {
-			this.seat = seat;
+		public SuggestionSystem(Seat... seats) {
+			this.seats = seats;
 		}
 
 		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
-			if (priceRange.includes(seat.price())) {
-				return Arrays.asList(seat);
-			} else {
-				return emptyList();
+			for (Seat seat : seats) {
+				if (priceRange.includes(seat.price())) {
+					return Arrays.asList(seat);
+				}
 			}
+			return emptyList();
 		}
 	}
 }
