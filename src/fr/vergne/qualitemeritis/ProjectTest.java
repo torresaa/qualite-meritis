@@ -12,14 +12,21 @@ class ProjectTest {
 
 	@Test
 	void test() {
-		Seat seat = new Seat();
+		Price price = new Price();
+		Seat seat = new Seat(price);
 		SuggestionSystem system = new SuggestionSystem(seat);
-		PriceRange priceRange = new PriceRange();
+		PriceRange priceRange = new PriceRange(price, price);
 		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
 		assertEquals(Arrays.asList(seat), bestSeats);
 	}
 
+	static class Price {
+	}
+
 	static class Seat {
+
+		public Seat(Price price) {
+		}
 
 		public Object price() {
 			return null;
@@ -27,6 +34,9 @@ class ProjectTest {
 	}
 
 	static class PriceRange {
+
+		public PriceRange(Price price, Price price2) {
+		}
 
 		public boolean includes(Object price) {
 			return true;
