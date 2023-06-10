@@ -7,8 +7,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -29,7 +32,7 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked());
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -58,7 +61,7 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(1);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked());
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
@@ -76,7 +79,7 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(10);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked());
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice.minus(1), targetPrice.plus(1));
@@ -97,7 +100,7 @@ class OfferBestSeatsInPriceRangeTest {
 		List<Seat> freeSeats = new ArrayList<>(allSeats);
 		Seat bookedSeat = freeSeats.remove(seatIndex - 1);
 		Predicate<Seat> freeSeatPredicate = seat -> !bookedSeat.equals(seat);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -114,7 +117,7 @@ class OfferBestSeatsInPriceRangeTest {
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
 		Predicate<Seat> freeSeatPredicate = seat -> false;
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -135,7 +138,8 @@ class OfferBestSeatsInPriceRangeTest {
 		Seat partySeat = seat1;
 		List<Seat> party = Arrays.asList(partySeat);
 		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate);
+		BiFunction<Seat, Seat, Integer> seatsDistancer = sequentialDistanceOver(allSeats);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -143,6 +147,28 @@ class OfferBestSeatsInPriceRangeTest {
 
 		// THEN
 		assertEquals(Arrays.asList(seat2, seat3), bestSeats);
+	}
+
+	@Test
+	void testReturnsAdjacentSeatOfSinglePartyMemberFirst2() {
+		// GIVEN
+		Price price = Price.euros(5);
+		Seat seat1 = new Seat(price);
+		Seat seat2 = new Seat(price);
+		Seat seat3 = new Seat(price);
+		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3);
+		Seat partySeat = seat3;
+		List<Seat> party = Arrays.asList(partySeat);
+		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
+		BiFunction<Seat, Seat, Integer> seatsDistancer = sequentialDistanceOver(allSeats);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
+
+		// THEN
+		assertEquals(Arrays.asList(seat2, seat1), bestSeats);
 	}
 
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
@@ -154,8 +180,16 @@ class OfferBestSeatsInPriceRangeTest {
 		return seat -> true;
 	}
 
+	private static BiFunction<Seat, Seat, Integer> uncaringDistance() {
+		return (s1, s2) -> 0;
+	}
+
 	private static List<Seat> noParty() {
 		return emptyList();
+	}
+
+	private static BiFunction<Seat, Seat, Integer> sequentialDistanceOver(List<Seat> seats) {
+		return (s1, s2) -> Math.abs(seats.indexOf(s2) - seats.indexOf(s1));
 	}
 
 	enum Currency {
@@ -249,10 +283,13 @@ class OfferBestSeatsInPriceRangeTest {
 
 		private final List<Seat> seats;
 		private final Predicate<Seat> freeSeatPredicate;
+		private final BiFunction<Seat, Seat, Integer> seatsDistancer;
 
-		public SuggestionSystem(List<Seat> seats, Predicate<Seat> freeSeatPredicate) {
+		public SuggestionSystem(List<Seat> seats, Predicate<Seat> freeSeatPredicate,
+				BiFunction<Seat, Seat, Integer> seatsDistancer) {
 			this.seats = seats;
 			this.freeSeatPredicate = freeSeatPredicate;
+			this.seatsDistancer = seatsDistancer;
 		}
 
 		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange, Collection<Seat> party) {
@@ -262,7 +299,39 @@ class OfferBestSeatsInPriceRangeTest {
 					satisfyingSeats.add(seat);
 				}
 			}
+
+			if (!party.isEmpty()) {
+				satisfyingSeats.sort(onPartyAdjacency(party));
+			}
 			return satisfyingSeats;
+		}
+
+		private Comparator<Seat> onPartyAdjacency(Collection<Seat> party) {
+			Function<Seat, Integer> partyDistancer = partyDistancerOn(party);
+			return (s1, s2) -> {
+				Integer dist1 = partyDistancer.apply(s1);
+				Integer dist2 = partyDistancer.apply(s2);
+				if (dist1 == 1 && dist2 != 1) {
+					// s1 is better because adjacent
+					return -1;
+				} else if (dist1 != 1 && dist2 == 1) {
+					// s2 is better because adjacent
+					return 1;
+				} else {
+					// No difference
+					return 0;
+				}
+			};
+		}
+
+		private Function<Seat, Integer> partyDistancerOn(Collection<Seat> party) {
+			if (party.isEmpty()) {
+				throw new IllegalArgumentException("No party seat");
+			}
+			return seat -> party.stream()//
+					.mapToInt(partySeat -> seatsDistancer.apply(partySeat, seat))//
+					.min()//
+					.getAsInt();
 		}
 	}
 }
