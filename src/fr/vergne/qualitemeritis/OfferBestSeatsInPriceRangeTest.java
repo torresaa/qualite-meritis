@@ -1,6 +1,7 @@
 package fr.vergne.qualitemeritis;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.shuffle;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -196,6 +198,30 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEqualsUnordered(Arrays.asList(seat2, seat4), bestSeats.subList(0, 2));
 	}
 
+	@Test
+	void testReturnsAdjacentSeatOfSinglePartyMemberFirst4() {
+		// GIVEN
+		Price price = Price.euros(5);
+		List<Seat> allSeats = range(0, 10).mapToObj(i -> new Seat(price)).toList();
+
+		List<Seat> adjacentSeats = new ArrayList<>(allSeats);
+		shuffle(adjacentSeats, new Random(0));
+		Seat partySeat = adjacentSeats.remove(0);
+		adjacentSeats = adjacentSeats.subList(0, adjacentSeats.size() / 2);
+
+		List<Seat> party = Arrays.asList(partySeat);
+		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
+		BiFunction<Seat, Seat, Integer> seatsDistancer = adjacencyDistance(partySeat, adjacentSeats);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
+
+		// THEN
+		assertEqualsUnordered(adjacentSeats, bestSeats.subList(0, adjacentSeats.size()));
+	}
+
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
 		int[] nextValue = { 0 };
 		return () -> Price.euros(nextValue[0] += increment);
@@ -215,6 +241,19 @@ class OfferBestSeatsInPriceRangeTest {
 
 	private static BiFunction<Seat, Seat, Integer> sequentialDistanceOver(List<Seat> seats) {
 		return (s1, s2) -> Math.abs(seats.indexOf(s2) - seats.indexOf(s1));
+	}
+
+	private static BiFunction<Seat, Seat, Integer> adjacencyDistance(Seat partySeat, Collection<Seat> adjacentSeats) {
+		return (seat1, seat2) -> {
+			if (seat1.equals(seat2)) {
+				return 0;
+			} else if ((partySeat.equals(seat1) && adjacentSeats.contains(seat2))//
+					|| (partySeat.equals(seat2) && adjacentSeats.contains(seat1))) {
+				return 1;
+			} else {
+				return 2;
+			}
+		};
 	}
 
 	private static void assertEqualsUnordered(List<Seat> expected, List<Seat> actual) {
