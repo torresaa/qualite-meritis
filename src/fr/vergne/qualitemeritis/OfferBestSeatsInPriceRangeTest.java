@@ -198,11 +198,16 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEqualsUnordered(Arrays.asList(seat2, seat4), bestSeats.subList(0, 2));
 	}
 
-	@Test
-	void testReturnsAdjacentSeatOfSinglePartyMemberFirst4() {
+	static Stream<Integer> seatsCountForAdjacency() {
+		return Stream.of(3, 5, 10, 100);
+	}
+
+	@ParameterizedTest(name = "{0} seats")
+	@MethodSource("seatsCountForAdjacency")
+	void testReturnsFirstAdjacentSeatsOfSinglePartyMember(int seatsCount) {
 		// GIVEN
 		Price price = Price.euros(5);
-		List<Seat> allSeats = range(0, 10).mapToObj(i -> new Seat(price)).toList();
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
 
 		List<Seat> adjacentSeats = new ArrayList<>(allSeats);
 		shuffle(adjacentSeats, new Random(0));
