@@ -107,6 +107,23 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(freeSeats, bestSeats);
 	}
 
+	@ParameterizedTest(name = "{0} seats")
+	@MethodSource("seatsCount")
+	void testReturnsNoSeatAssumingExactlyMatchingPriceRangeButAllBooked(int seatsCount) {
+		// GIVEN
+		Price price = Price.euros(5);
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
+		Predicate<Seat> freeSeatPredicate = seat -> false;
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+
+		// THEN
+		assertEquals(emptyList(), bestSeats);
+	}
+
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
 		int[] nextValue = { 0 };
 		return () -> Price.euros(nextValue[0] += increment);
