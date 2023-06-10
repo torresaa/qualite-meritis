@@ -2,6 +2,8 @@ package fr.vergne.qualitemeritis;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.shuffle;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,8 +12,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -159,6 +163,44 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEqualsUnordered(adjacentSeats, bestSeats.subList(0, adjacentSeats.size()));
 	}
 
+	@Test
+	void testReturnsAdjacentSeatsFirstForAllPartyMembers() {
+		// GIVEN
+		Price price = Price.euros(5);
+		// Create a lot of seats
+		List<Seat> allSeats = range(0, 100).mapToObj(i -> new Seat(price)).collect(toList());
+
+		// Extract a few seats for party and adjacent seats
+		// The suggestion should prioritize these few in the mass
+		Iterator<Seat> remainingSeat = allSeats.iterator();
+		Map<Seat, Collection<Seat>> adjacencies = range(0, 3)//
+				.mapToObj(i -> i)// Transform to object stream to access collect method
+				.collect(toMap(//
+						// party seat as key
+						i -> remainingSeat.next(), //
+						// list of few adjacent seats as value
+						i -> Arrays.asList(remainingSeat.next(), remainingSeat.next())//
+				));
+		BiFunction<Seat, Seat, Integer> seatsDistancer = adjacencyDistance(adjacencies);
+		shuffle(allSeats, new Random(0));// Ensure uncorrelated order with adjacencies
+
+		Collection<Seat> party = adjacencies.keySet();
+		Collection<Seat> adjacentSeats = mergedValues(adjacencies);
+		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
+
+		// THEN
+		assertEqualsUnordered(adjacentSeats, bestSeats.subList(0, adjacentSeats.size()));
+	}
+
+	private static Collection<Seat> mergedValues(Map<Seat, Collection<Seat>> adjacencies) {
+		return adjacencies.values().stream().flatMap(Collection::stream).toList();
+	}
+
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
 		int[] nextValue = { 0 };
 		return () -> Price.euros(nextValue[0] += increment);
@@ -189,7 +231,18 @@ class OfferBestSeatsInPriceRangeTest {
 		};
 	}
 
-	private static void assertEqualsUnordered(List<Seat> expected, List<Seat> actual) {
+	private static BiFunction<Seat, Seat, Integer> adjacencyDistance(Map<Seat, Collection<Seat>> adjacencies) {
+		List<BiFunction<Seat, Seat, Integer>> distancers = adjacencies.entrySet().stream()//
+				.map(entry -> adjacencyDistance(entry.getKey(), entry.getValue()))//
+				.toList();
+		return (seat1, seat2) -> {
+			return distancers.stream()//
+					.mapToInt(distancer -> distancer.apply(seat1, seat2))//
+					.min().getAsInt();
+		};
+	}
+
+	private static void assertEqualsUnordered(Collection<Seat> expected, Collection<Seat> actual) {
 		assertEquals(new HashSet<>(expected), new HashSet<>(actual));
 	}
 
