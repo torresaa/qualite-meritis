@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -171,6 +172,30 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(Arrays.asList(seat2, seat1), bestSeats);
 	}
 
+	@Test
+	void testReturnsAdjacentSeatOfSinglePartyMemberFirst3() {
+		// GIVEN
+		Price price = Price.euros(5);
+		Seat seat1 = new Seat(price);
+		Seat seat2 = new Seat(price);
+		Seat seat3 = new Seat(price);
+		Seat seat4 = new Seat(price);
+		Seat seat5 = new Seat(price);
+		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3, seat4, seat5);
+		Seat partySeat = seat3;
+		List<Seat> party = Arrays.asList(partySeat);
+		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
+		BiFunction<Seat, Seat, Integer> seatsDistancer = sequentialDistanceOver(allSeats);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
+
+		// THEN
+		assertEqualsUnordered(Arrays.asList(seat2, seat4), bestSeats.subList(0, 2));
+	}
+
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
 		int[] nextValue = { 0 };
 		return () -> Price.euros(nextValue[0] += increment);
@@ -190,6 +215,10 @@ class OfferBestSeatsInPriceRangeTest {
 
 	private static BiFunction<Seat, Seat, Integer> sequentialDistanceOver(List<Seat> seats) {
 		return (s1, s2) -> Math.abs(seats.indexOf(s2) - seats.indexOf(s1));
+	}
+
+	private static void assertEqualsUnordered(List<Seat> expected, List<Seat> actual) {
+		assertEquals(new HashSet<>(expected), new HashSet<>(actual));
 	}
 
 	enum Currency {
@@ -292,7 +321,7 @@ class OfferBestSeatsInPriceRangeTest {
 			this.seatsDistancer = seatsDistancer;
 		}
 
-		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange, Collection<Seat> party) {
+		public List<Seat> offerBestSeatsIn(PriceRange priceRange, Collection<Seat> party) {
 			List<Seat> satisfyingSeats = new LinkedList<>();
 			for (Seat seat : seats) {
 				if (freeSeatPredicate.test(seat) && priceRange.includes(seat.price())) {
