@@ -39,19 +39,21 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(allSeats, bestSeats);
 	}
 
-	static Stream<Object[]> seatsCountAndIndex() {
+	static Stream<Object[]> seatIndexAndCount() {
 		// The index is one-based to offer a better report readability
 		return seatsCount().flatMap(count -> {
 			return Stream.of(//
-					new Object[] { 1, count }, // first seat
-					new Object[] { (count + 1) / 2, count }, // middle seat
-					new Object[] { count, count }// last seat
+					Arrays.asList(1, count), // first seat
+					Arrays.asList((count + 1) / 2, count), // middle seat
+					Arrays.asList(count, count)// last seat
 			);
-		});
+		})//
+				.distinct()// Remove redundant cases
+				.map(List::toArray); // As Object[] to be compatible with parameterized tests
 	}
 
 	@ParameterizedTest(name = "seat {0} in {1}")
-	@MethodSource("seatsCountAndIndex")
+	@MethodSource("seatIndexAndCount")
 	void testReturnsOnlySeatMatchingPriceRange(int seatIndex, int seatsCount) {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(1);
@@ -69,7 +71,7 @@ class OfferBestSeatsInPriceRangeTest {
 	}
 
 	@ParameterizedTest(name = "seat {0} in {1}")
-	@MethodSource("seatsCountAndIndex")
+	@MethodSource("seatIndexAndCount")
 	void testReturnsOnlySeatWithinPriceRange(int seatIndex, int seatsCount) {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(10);
@@ -87,7 +89,7 @@ class OfferBestSeatsInPriceRangeTest {
 	}
 
 	@ParameterizedTest(name = "seat {0} in {1}")
-	@MethodSource("seatsCountAndIndex")
+	@MethodSource("seatIndexAndCount")
 	void testReturnsAllButSingleBookedSeat(int seatIndex, int seatsCount) {
 		// GIVEN
 		Price price = Price.euros(10);
