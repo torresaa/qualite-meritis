@@ -33,7 +33,7 @@ class OfferBestSeatsInPriceRangeTest {
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
 		assertEquals(allSeats, bestSeats);
@@ -64,7 +64,7 @@ class OfferBestSeatsInPriceRangeTest {
 		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
 		assertEquals(Arrays.asList(targetSeat), bestSeats);
@@ -82,7 +82,7 @@ class OfferBestSeatsInPriceRangeTest {
 		PriceRange priceRange = new PriceRange(targetPrice.minus(1), targetPrice.plus(1));
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
 		assertEquals(Arrays.asList(targetSeat), bestSeats);
@@ -101,7 +101,7 @@ class OfferBestSeatsInPriceRangeTest {
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
 		assertEquals(freeSeats, bestSeats);
@@ -118,7 +118,7 @@ class OfferBestSeatsInPriceRangeTest {
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
 		assertEquals(emptyList(), bestSeats);
@@ -131,6 +131,10 @@ class OfferBestSeatsInPriceRangeTest {
 
 	private static Predicate<Seat> nothingBooked() {
 		return seat -> true;
+	}
+
+	private static List<Seat> noParty() {
+		return emptyList();
 	}
 
 	enum Currency {
@@ -230,7 +234,7 @@ class OfferBestSeatsInPriceRangeTest {
 			this.freeSeatPredicate = freeSeatPredicate;
 		}
 
-		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange) {
+		public Collection<Seat> offerBestSeatsIn(PriceRange priceRange, Collection<Seat> party) {
 			List<Seat> satisfyingSeats = new LinkedList<>();
 			for (Seat seat : seats) {
 				if (freeSeatPredicate.test(seat) && priceRange.includes(seat.price())) {
