@@ -314,6 +314,11 @@ class OfferBestSeatsInPriceRangeTest {
 			return value * currency.hashCode();
 		}
 
+		@Override
+		public String toString() {
+			return "" + value + currency;
+		}
+
 		public static Price euros(int value) {
 			return new Price(value, Currency.EURO);
 		}
@@ -329,6 +334,11 @@ class OfferBestSeatsInPriceRangeTest {
 
 		public Price price() {
 			return price;
+		}
+
+		@Override
+		public String toString() {
+			return "Seat[" + hashCode() % 1000 + "]@" + price;
 		}
 	}
 
