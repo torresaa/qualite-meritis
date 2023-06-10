@@ -310,11 +310,11 @@ class OfferBestSeatsInPriceRangeTest {
 
 	static class SuggestionSystem {
 
-		private final List<Seat> seats;
+		private final Collection<Seat> seats;
 		private final Predicate<Seat> freeSeatPredicate;
 		private final BiFunction<Seat, Seat, Integer> seatsDistancer;
 
-		public SuggestionSystem(List<Seat> seats, Predicate<Seat> freeSeatPredicate,
+		public SuggestionSystem(Collection<Seat> seats, Predicate<Seat> freeSeatPredicate,
 				BiFunction<Seat, Seat, Integer> seatsDistancer) {
 			this.seats = seats;
 			this.freeSeatPredicate = freeSeatPredicate;
