@@ -204,7 +204,7 @@ class OfferBestSeatsInPriceRangeTest {
 
 	@ParameterizedTest(name = "{0} seats")
 	@MethodSource("seatsCountForAdjacency")
-	void testReturnsFirstAdjacentSeatsOfSinglePartyMember(int seatsCount) {
+	void testReturnsAdjacentSeatsFirstForSinglePartyMember(int seatsCount) {
 		// GIVEN
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
