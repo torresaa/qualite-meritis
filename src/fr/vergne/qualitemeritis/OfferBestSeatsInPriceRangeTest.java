@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -85,12 +86,15 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(Arrays.asList(targetSeat), bestSeats);
 	}
 
-	@Test
-	void testDoesNotReturnBookedSeat() {
+	@ParameterizedTest(name = "seat {0} in {1}")
+	@MethodSource("seatsCountAndIndex")
+	void testReturnsAllButSingleBookedSeat(int seatIndex, int seatsCount) {
 		// GIVEN
-		Price price = Price.euros(5);
-		List<Seat> allSeats = Arrays.asList(new Seat(price));
-		Predicate<Seat> freeSeatPredicate = seat -> false;
+		Price price = Price.euros(10);
+		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
+		List<Seat> freeSeats = new ArrayList<>(allSeats);
+		Seat bookedSeat = freeSeats.remove(seatIndex - 1);
+		Predicate<Seat> freeSeatPredicate = seat -> !bookedSeat.equals(seat);
 		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate);
 		PriceRange priceRange = new PriceRange(price, price);
 
@@ -98,7 +102,7 @@ class OfferBestSeatsInPriceRangeTest {
 		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange);
 
 		// THEN
-		assertEquals(emptyList(), bestSeats);
+		assertEquals(freeSeats, bestSeats);
 	}
 
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
