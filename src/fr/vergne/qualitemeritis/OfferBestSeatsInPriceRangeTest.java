@@ -130,74 +130,6 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(emptyList(), bestSeats);
 	}
 
-	@Test
-	void testReturnsAdjacentSeatOfSinglePartyMemberFirst() {
-		// GIVEN
-		Price price = Price.euros(5);
-		Seat seat1 = new Seat(price);
-		Seat seat2 = new Seat(price);
-		Seat seat3 = new Seat(price);
-		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3);
-		Seat partySeat = seat1;
-		List<Seat> party = Arrays.asList(partySeat);
-		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
-		BiFunction<Seat, Seat, Integer> seatsDistancer = sequentialDistanceOver(allSeats);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
-		PriceRange priceRange = new PriceRange(price, price);
-
-		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
-
-		// THEN
-		assertEquals(Arrays.asList(seat2, seat3), bestSeats);
-	}
-
-	@Test
-	void testReturnsAdjacentSeatOfSinglePartyMemberFirst2() {
-		// GIVEN
-		Price price = Price.euros(5);
-		Seat seat1 = new Seat(price);
-		Seat seat2 = new Seat(price);
-		Seat seat3 = new Seat(price);
-		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3);
-		Seat partySeat = seat3;
-		List<Seat> party = Arrays.asList(partySeat);
-		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
-		BiFunction<Seat, Seat, Integer> seatsDistancer = sequentialDistanceOver(allSeats);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
-		PriceRange priceRange = new PriceRange(price, price);
-
-		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
-
-		// THEN
-		assertEquals(Arrays.asList(seat2, seat1), bestSeats);
-	}
-
-	@Test
-	void testReturnsAdjacentSeatOfSinglePartyMemberFirst3() {
-		// GIVEN
-		Price price = Price.euros(5);
-		Seat seat1 = new Seat(price);
-		Seat seat2 = new Seat(price);
-		Seat seat3 = new Seat(price);
-		Seat seat4 = new Seat(price);
-		Seat seat5 = new Seat(price);
-		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3, seat4, seat5);
-		Seat partySeat = seat3;
-		List<Seat> party = Arrays.asList(partySeat);
-		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
-		BiFunction<Seat, Seat, Integer> seatsDistancer = sequentialDistanceOver(allSeats);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
-		PriceRange priceRange = new PriceRange(price, price);
-
-		// WHEN
-		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
-
-		// THEN
-		assertEqualsUnordered(Arrays.asList(seat2, seat4), bestSeats.subList(0, 2));
-	}
-
 	static Stream<Integer> seatsCountForAdjacency() {
 		return Stream.of(3, 5, 10, 100);
 	}
@@ -242,10 +174,6 @@ class OfferBestSeatsInPriceRangeTest {
 
 	private static List<Seat> noParty() {
 		return emptyList();
-	}
-
-	private static BiFunction<Seat, Seat, Integer> sequentialDistanceOver(List<Seat> seats) {
-		return (s1, s2) -> Math.abs(seats.indexOf(s2) - seats.indexOf(s1));
 	}
 
 	private static BiFunction<Seat, Seat, Integer> adjacencyDistance(Seat partySeat, Collection<Seat> adjacentSeats) {
