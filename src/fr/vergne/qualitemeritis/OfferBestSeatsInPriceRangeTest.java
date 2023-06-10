@@ -124,6 +124,27 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(emptyList(), bestSeats);
 	}
 
+	@Test
+	void testReturnsAdjacentSeatOfSinglePartyMemberFirst() {
+		// GIVEN
+		Price price = Price.euros(5);
+		Seat seat1 = new Seat(price);
+		Seat seat2 = new Seat(price);
+		Seat seat3 = new Seat(price);
+		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3);
+		Seat partySeat = seat1;
+		List<Seat> party = Arrays.asList(partySeat);
+		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
+
+		// THEN
+		assertEquals(Arrays.asList(seat2, seat3), bestSeats);
+	}
+
 	private static Supplier<Price> createIncrementingPricesPer(int increment) {
 		int[] nextValue = { 0 };
 		return () -> Price.euros(nextValue[0] += increment);
