@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -475,20 +474,13 @@ class OfferBestSeatsInPriceRangeTest {
 		}
 
 		public List<Seat> offerBestSeatsIn(PriceRange priceRange, Collection<Seat> party) {
-			List<Seat> satisfyingSeats = new LinkedList<>();
-			for (Seat seat : seats) {
-				if (freeSeatPredicate.test(seat) && priceRange.includes(seat.price())) {
-					satisfyingSeats.add(seat);
-				}
-			}
-
-			satisfyingSeats.sort(//
-					onDistanceTo(party)//
+			return seats.stream()//
+					.filter(freeSeatPredicate)//
+					.filter(seat -> priceRange.includes(seat.price()))//
+					.sorted(onDistanceTo(party)//
 							.thenComparing(onMiddleRowDistance())//
 							.thenComparing(onStageDistance())//
-			);
-
-			return satisfyingSeats;
+					).toList();
 		}
 
 		private Comparator<Seat> onStageDistance() {
