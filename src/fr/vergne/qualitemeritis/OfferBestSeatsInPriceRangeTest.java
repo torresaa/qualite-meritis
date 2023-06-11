@@ -61,6 +61,19 @@ class OfferBestSeatsInPriceRangeTest {
 				.map(List::toArray); // As Object[] to be compatible with parameterized tests
 	}
 
+	static Stream<Object[]> seatExtractAndTotal() {
+		return seatsCount().flatMap(count -> {
+			return Stream.of(//
+					Arrays.asList(0, count), // No seat
+					Arrays.asList(1, count), // One seat
+					Arrays.asList(count / 2, count), // Half of seats
+					Arrays.asList(count, count)// All seats
+			);
+		})//
+				.distinct()// Remove redundant cases
+				.map(List::toArray); // As Object[] to be compatible with parameterized tests
+	}
+
 	@ParameterizedTest(name = "seat {0} in {1}")
 	@MethodSource("seatIndexAndCount")
 	void testReturnsOnlySeatMatchingPriceRange(int seatIndex, int seatsCount) {
@@ -99,33 +112,14 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(Arrays.asList(targetSeat), result);
 	}
 
-	@ParameterizedTest(name = "seat {0} in {1}")
-	@MethodSource("seatIndexAndCount")
-	void testReturnsAllButSingleBookedSeat(int seatIndex, int seatsCount) {
-		// GIVEN
-		Price price = Price.euros(10);
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-		List<Seat> freeSeats = new ArrayList<>(allSeats);
-		Seat bookedSeat = freeSeats.remove(seatIndex - 1);
-		Predicate<Seat> freeSeatPredicate = seat -> !bookedSeat.equals(seat);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, noSeatDistance(),
-				noMiddleRowDistance(), noStageDistance());
-		PriceRange priceRange = new PriceRange(price, price);
-
-		// WHEN
-		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
-
-		// THEN
-		assertEquals(freeSeats, result);
-	}
-
-	@ParameterizedTest(name = "{0} seats")
-	@MethodSource("seatsCount")
-	void testReturnsNoSeatAssumingExactlyMatchingPriceRangeButAllBooked(int seatsCount) {
+	@ParameterizedTest(name = "{0} free seats in {1}")
+	@MethodSource("seatExtractAndTotal")
+	void testReturnsOnlyFreeSeats(int countFreeSeats, int countTotalSeats) {
 		// GIVEN
 		Price price = Price.euros(5);
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-		Predicate<Seat> freeSeatPredicate = seat -> false;
+		List<Seat> allSeats = range(0, countTotalSeats).mapToObj(i -> new Seat(price)).toList();
+		List<Seat> freeSeats = allSeats.subList(0, countFreeSeats);
+		Predicate<Seat> freeSeatPredicate = seat -> freeSeats.contains(seat);
 		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, noSeatDistance(),
 				noMiddleRowDistance(), noStageDistance());
 		PriceRange priceRange = new PriceRange(price, price);
@@ -134,7 +128,7 @@ class OfferBestSeatsInPriceRangeTest {
 		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(emptyList(), result);
+		assertEqualsUnordered(freeSeats, result);
 	}
 
 	static Stream<Integer> seatsCountForAdjacency() {
