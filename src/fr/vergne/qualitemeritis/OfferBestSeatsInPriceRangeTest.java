@@ -31,23 +31,6 @@ class OfferBestSeatsInPriceRangeTest {
 		return Stream.of(1, 2, 5, 10, 100);
 	}
 
-	@ParameterizedTest(name = "{0} seats")
-	@MethodSource("seatsCount")
-	void testReturnsAllSeatsAssumingExactlyMatchingPriceRange(int seatsCount) {
-		// GIVEN
-		Price price = Price.euros(5);
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(),
-				noMiddleRowDistance(), noStageDistance());
-		PriceRange priceRange = new PriceRange(price, price);
-
-		// WHEN
-		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
-
-		// THEN
-		assertEquals(allSeats, result);
-	}
-
 	static Stream<Object[]> seatIndexAndCount() {
 		// The index is one-based to offer a better report readability
 		return seatsCount().flatMap(count -> {
@@ -74,42 +57,29 @@ class OfferBestSeatsInPriceRangeTest {
 				.map(List::toArray); // As Object[] to be compatible with parameterized tests
 	}
 
-	@ParameterizedTest(name = "seat {0} in {1}")
-	@MethodSource("seatIndexAndCount")
-	void testReturnsOnlySeatMatchingPriceRange(int seatIndex, int seatsCount) {
+	@Test
+	void testReturnsOnlySeatsInPriceRange() {
 		// GIVEN
-		Supplier<Price> priceSupplier = createIncrementingPricesPer(1);
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
+		Price minPrice = Price.euros(2);
+		Price maxPrice = Price.euros(4);
+		PriceRange priceRange = new PriceRange(minPrice, maxPrice);
+
+		Seat seatBeforeRange = new Seat(Price.euros(1));
+		Seat seatMinRange = new Seat(Price.euros(2));
+		Seat seatMidRange = new Seat(Price.euros(3));
+		Seat seatMaxRange = new Seat(Price.euros(4));
+		Seat seatAfterRange = new Seat(Price.euros(5));
+		List<Seat> allSeats = Arrays.asList(seatBeforeRange, seatMinRange, seatMidRange, seatMaxRange, seatAfterRange);
+		List<Seat> seatsInRange = Arrays.asList(seatMinRange, seatMidRange, seatMaxRange);
+
 		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(),
 				noMiddleRowDistance(), noStageDistance());
-		Seat targetSeat = allSeats.get(seatIndex - 1);
-		Price targetPrice = targetSeat.price();
-		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
 
 		// WHEN
 		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(Arrays.asList(targetSeat), result);
-	}
-
-	@ParameterizedTest(name = "seat {0} in {1}")
-	@MethodSource("seatIndexAndCount")
-	void testReturnsOnlySeatWithinPriceRange(int seatIndex, int seatsCount) {
-		// GIVEN
-		Supplier<Price> priceSupplier = createIncrementingPricesPer(10);
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(),
-				noMiddleRowDistance(), noStageDistance());
-		Seat targetSeat = allSeats.get(seatIndex - 1);
-		Price targetPrice = targetSeat.price();
-		PriceRange priceRange = new PriceRange(targetPrice.minus(1), targetPrice.plus(1));
-
-		// WHEN
-		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
-
-		// THEN
-		assertEquals(Arrays.asList(targetSeat), result);
+		assertEqualsUnordered(seatsInRange, result);
 	}
 
 	@ParameterizedTest(name = "{0} free seats in {1}")
@@ -295,11 +265,6 @@ class OfferBestSeatsInPriceRangeTest {
 
 	private static Collection<Seat> mergedValues(Map<Seat, Collection<Seat>> adjacencies) {
 		return adjacencies.values().stream().flatMap(Collection::stream).toList();
-	}
-
-	private static Supplier<Price> createIncrementingPricesPer(int increment) {
-		int[] nextValue = { 0 };
-		return () -> Price.euros(nextValue[0] += increment);
 	}
 
 	private static Predicate<Seat> allSeatsFree() {
