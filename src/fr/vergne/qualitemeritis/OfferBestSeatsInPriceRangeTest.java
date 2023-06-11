@@ -37,15 +37,15 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(),
 				noMiddleRowDistance(), noStageDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
+		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(allSeats, bestSeats);
+		assertEquals(allSeats, result);
 	}
 
 	static Stream<Object[]> seatIndexAndCount() {
@@ -67,17 +67,17 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(1);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(),
 				noMiddleRowDistance(), noStageDistance());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
+		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(Arrays.asList(targetSeat), bestSeats);
+		assertEquals(Arrays.asList(targetSeat), result);
 	}
 
 	@ParameterizedTest(name = "seat {0} in {1}")
@@ -86,17 +86,17 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(10);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(),
 				noMiddleRowDistance(), noStageDistance());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice.minus(1), targetPrice.plus(1));
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
+		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(Arrays.asList(targetSeat), bestSeats);
+		assertEquals(Arrays.asList(targetSeat), result);
 	}
 
 	@ParameterizedTest(name = "seat {0} in {1}")
@@ -108,15 +108,15 @@ class OfferBestSeatsInPriceRangeTest {
 		List<Seat> freeSeats = new ArrayList<>(allSeats);
 		Seat bookedSeat = freeSeats.remove(seatIndex - 1);
 		Predicate<Seat> freeSeatPredicate = seat -> !bookedSeat.equals(seat);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance(),
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, noSeatDistance(),
 				noMiddleRowDistance(), noStageDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
+		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(freeSeats, bestSeats);
+		assertEquals(freeSeats, result);
 	}
 
 	@ParameterizedTest(name = "{0} seats")
@@ -126,15 +126,15 @@ class OfferBestSeatsInPriceRangeTest {
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
 		Predicate<Seat> freeSeatPredicate = seat -> false;
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance(),
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, noSeatDistance(),
 				noMiddleRowDistance(), noStageDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		Collection<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
+		Collection<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(emptyList(), bestSeats);
+		assertEquals(emptyList(), result);
 	}
 
 	static Stream<Integer> seatsCountForAdjacency() {
@@ -143,7 +143,7 @@ class OfferBestSeatsInPriceRangeTest {
 
 	@ParameterizedTest(name = "{0} seats")
 	@MethodSource("seatsCountForAdjacency")
-	void testReturnsAdjacentSeatsFirstForSinglePartyMember(int seatsCount) {
+	void testReturnsSeatsAdjacentToSingleParty(int seatsCount) {
 		// GIVEN
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
@@ -161,14 +161,14 @@ class OfferBestSeatsInPriceRangeTest {
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
+		List<Seat> result = system.offerBestSeatsIn(priceRange, party);
 
 		// THEN
-		assertEqualsUnordered(adjacentSeats, bestSeats.subList(0, adjacentSeats.size()));
+		assertEqualsUnordered(adjacentSeats, result.subList(0, adjacentSeats.size()));
 	}
 
 	@Test
-	void testReturnsAdjacentSeatsFirstForAllPartyMembers() {
+	void testReturnsSeatsAdjacentToGroupParty() {
 		// GIVEN
 		Price price = Price.euros(5);
 		// Create a lot of seats
@@ -196,10 +196,10 @@ class OfferBestSeatsInPriceRangeTest {
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, party);
+		List<Seat> result = system.offerBestSeatsIn(priceRange, party);
 
 		// THEN
-		assertEqualsUnordered(adjacentSeats, bestSeats.subList(0, adjacentSeats.size()));
+		assertEqualsUnordered(adjacentSeats, result.subList(0, adjacentSeats.size()));
 	}
 
 	@Test
@@ -215,15 +215,15 @@ class OfferBestSeatsInPriceRangeTest {
 		Function<Seat, Integer> middleRowDistancer = seat -> expected.indexOf(seat);
 		shuffle(allSeats, new Random(0));// Ensure uncorrelated order with expected result
 
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
-				middleRowDistancer, noStageDistance());
+		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(), middleRowDistancer,
+				noStageDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
-		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
+		List<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEquals(expected, bestSeats);
+		assertEquals(expected, result);
 	}
 
 	@Test
@@ -239,7 +239,7 @@ class OfferBestSeatsInPriceRangeTest {
 		Function<Seat, Integer> stageDistancer = seat -> expected.indexOf(seat);
 		shuffle(allSeats, new Random(0));// Ensure uncorrelated order with expected result
 
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(),
 				noMiddleRowDistance(), stageDistancer);
 		PriceRange priceRange = new PriceRange(price, price);
 
@@ -288,8 +288,8 @@ class OfferBestSeatsInPriceRangeTest {
 
 		Function<Seat, Integer> stageDistancer = seat -> seat.equals(seatCloseToStage) ? 0 : 1;
 
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
-				middleRowDistancer, stageDistancer);
+		SuggestionSystem system = new SuggestionSystem(allSeats, allSeatsFree(), noSeatDistance(), middleRowDistancer,
+				stageDistancer);
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -308,11 +308,11 @@ class OfferBestSeatsInPriceRangeTest {
 		return () -> Price.euros(nextValue[0] += increment);
 	}
 
-	private static Predicate<Seat> nothingBooked() {
+	private static Predicate<Seat> allSeatsFree() {
 		return seat -> true;
 	}
 
-	private static BiFunction<Seat, Seat, Integer> uncaringDistance() {
+	private static BiFunction<Seat, Seat, Integer> noSeatDistance() {
 		return (s1, s2) -> 0;
 	}
 
