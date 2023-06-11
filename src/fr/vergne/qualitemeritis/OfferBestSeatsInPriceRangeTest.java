@@ -358,21 +358,6 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(new HashSet<>(expected), new HashSet<>(actual));
 	}
 
-	enum Currency {
-		EURO("€");
-
-		private final String unit;
-
-		Currency(String unit) {
-			this.unit = unit;
-		}
-
-		@Override
-		public String toString() {
-			return unit;
-		}
-	}
-
 	static class Price {
 		private final int value;
 		private final Currency currency;
