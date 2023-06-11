@@ -252,6 +252,32 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	void testReturnsSeatCloseToPartyOverSeatCloseToMiddleOfRow() {
+		// GIVEN
+		Price price = Price.euros(5);
+		Seat partySeat = new Seat(price);
+		Seat seatCloseToParty = new Seat(price);
+		Seat seatCloseToMiddle = new Seat(price);
+		List<Seat> allSeats = Arrays.asList(partySeat, seatCloseToParty, seatCloseToMiddle);
+
+		List<Seat> party = Arrays.asList(partySeat);
+		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
+		BiFunction<Seat, Seat, Integer> seatsDistancer = adjacencyDistance(partySeat, Arrays.asList(seatCloseToParty));
+
+		Function<Seat, Integer> middleRowDistancer = seat -> seat.equals(seatCloseToMiddle) ? 0 : 1;
+
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer, middleRowDistancer,
+				noStageDistance());
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		List<Seat> result = system.offerBestSeatsIn(priceRange, party);
+
+		// THEN
+		assertEquals(Arrays.asList(seatCloseToParty, seatCloseToMiddle), result);
+	}
+
 	private static Collection<Seat> mergedValues(Map<Seat, Collection<Seat>> adjacencies) {
 		return adjacencies.values().stream().flatMap(Collection::stream).toList();
 	}
@@ -432,10 +458,7 @@ class OfferBestSeatsInPriceRangeTest {
 				}
 			}
 
-			if (!party.isEmpty()) {
-				satisfyingSeats.sort(onPartyAdjacency(party));
-			}
-			satisfyingSeats.sort(onMiddleRowDistance());
+			satisfyingSeats.sort(onDistanceTo(party).thenComparing(onMiddleRowDistance()));
 			satisfyingSeats.sort(onStageDistance());
 
 			return satisfyingSeats;
@@ -455,6 +478,10 @@ class OfferBestSeatsInPriceRangeTest {
 				int dist2 = middleRowDistancer.apply(seat2);
 				return dist1 - dist2;
 			};
+		}
+
+		private Comparator<Seat> onDistanceTo(Collection<Seat> party) {
+			return !party.isEmpty() ? onPartyAdjacency(party) : (seat1, seat2) -> 0;
 		}
 
 		private Comparator<Seat> onPartyAdjacency(Collection<Seat> party) {
