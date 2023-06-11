@@ -2,6 +2,7 @@ package fr.vergne.qualitemeritis;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.shuffle;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
@@ -491,44 +492,34 @@ class OfferBestSeatsInPriceRangeTest {
 		}
 
 		private Comparator<Seat> onStageDistance() {
-			return (seat1, seat2) -> {
-				int dist1 = stageDistancer.apply(seat1);
-				int dist2 = stageDistancer.apply(seat2);
-				return dist1 - dist2;
-			};
+			return comparing(stageDistancer);
 		}
 
 		private Comparator<Seat> onMiddleRowDistance() {
-			return (seat1, seat2) -> {
-				int dist1 = middleRowDistancer.apply(seat1);
-				int dist2 = middleRowDistancer.apply(seat2);
-				return dist1 - dist2;
-			};
+			return comparing(middleRowDistancer);
 		}
 
 		private Comparator<Seat> onDistanceTo(Collection<Seat> party) {
-			return !party.isEmpty() ? onPartyAdjacency(party) : (seat1, seat2) -> 0;
+			return party.isEmpty() ? allSeatsEquidistant() : seatsAdjacentTo(party);
 		}
 
-		private Comparator<Seat> onPartyAdjacency(Collection<Seat> party) {
-			Function<Seat, Integer> partyDistancer = partyDistancerOn(party);
-			return (s1, s2) -> {
-				Integer dist1 = partyDistancer.apply(s1);
-				Integer dist2 = partyDistancer.apply(s2);
-				if (dist1 == 1 && dist2 != 1) {
-					// s1 is better because adjacent
-					return -1;
-				} else if (dist1 != 1 && dist2 == 1) {
-					// s2 is better because adjacent
-					return 1;
-				} else {
-					// No difference
-					return 0;
-				}
+		private Comparator<Seat> allSeatsEquidistant() {
+			return (seat1, seat2) -> 0;
+		}
+
+		private Comparator<Seat> seatsAdjacentTo(Collection<Seat> party) {
+			return comparing(distanceFrom(party), favorDistanceOfOne());
+		}
+
+		private Comparator<? super Integer> favorDistanceOfOne() {
+			return (dist1, dist2) -> {
+				return dist1 == 1 && dist2 != 1 ? -1 // s1 is better because adjacent
+						: dist1 != 1 && dist2 == 1 ? 1 // s2 is better because adjacent
+								: 0;// No difference in other cases
 			};
 		}
 
-		private Function<Seat, Integer> partyDistancerOn(Collection<Seat> party) {
+		private Function<Seat, Integer> distanceFrom(Collection<Seat> party) {
 			if (party.isEmpty()) {
 				throw new IllegalArgumentException("No party seat");
 			}
