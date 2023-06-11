@@ -101,38 +101,8 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEqualsUnordered(freeSeats, result);
 	}
 
-	static Stream<Integer> seatsCountForAdjacency() {
-		return Stream.of(3, 5, 10, 100);
-	}
-
-	@ParameterizedTest(name = "{0} seats")
-	@MethodSource("seatsCountForAdjacency")
-	void testReturnsSeatsAdjacentToSingleParty(int seatsCount) {
-		// GIVEN
-		Price price = Price.euros(5);
-		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-
-		List<Seat> adjacentSeats = new ArrayList<>(allSeats);
-		shuffle(adjacentSeats, new Random(0));
-		Seat partySeat = adjacentSeats.remove(0);
-		adjacentSeats = adjacentSeats.subList(0, adjacentSeats.size() / 2);
-
-		List<Seat> party = Arrays.asList(partySeat);
-		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
-		BiFunction<Seat, Seat, Integer> seatsDistancer = adjacencyDistance(partySeat, adjacentSeats);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer,
-				noMiddleRowDistance(), noStageDistance());
-		PriceRange priceRange = new PriceRange(price, price);
-
-		// WHEN
-		List<Seat> result = system.offerBestSeatsIn(priceRange, party);
-
-		// THEN
-		assertEqualsUnordered(adjacentSeats, result.subList(0, adjacentSeats.size()));
-	}
-
 	@Test
-	void testReturnsSeatsAdjacentToGroupParty() {
+	void testReturnsSeatsAdjacentToParty() {
 		// GIVEN
 		Price price = Price.euros(5);
 		// Create a lot of seats
