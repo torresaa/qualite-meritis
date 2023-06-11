@@ -39,7 +39,8 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance());
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+				noMiddleRowDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -68,7 +69,8 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(1);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance());
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+				noMiddleRowDistance());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice, targetPrice);
@@ -86,7 +88,8 @@ class OfferBestSeatsInPriceRangeTest {
 		// GIVEN
 		Supplier<Price> priceSupplier = createIncrementingPricesPer(10);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(priceSupplier.get())).toList();
-		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance());
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+				noMiddleRowDistance());
 		Seat targetSeat = allSeats.get(seatIndex - 1);
 		Price targetPrice = targetSeat.price();
 		PriceRange priceRange = new PriceRange(targetPrice.minus(1), targetPrice.plus(1));
@@ -107,7 +110,8 @@ class OfferBestSeatsInPriceRangeTest {
 		List<Seat> freeSeats = new ArrayList<>(allSeats);
 		Seat bookedSeat = freeSeats.remove(seatIndex - 1);
 		Predicate<Seat> freeSeatPredicate = seat -> !bookedSeat.equals(seat);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance());
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance(),
+				noMiddleRowDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -124,7 +128,8 @@ class OfferBestSeatsInPriceRangeTest {
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, seatsCount).mapToObj(i -> new Seat(price)).toList();
 		Predicate<Seat> freeSeatPredicate = seat -> false;
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance());
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, uncaringDistance(),
+				noMiddleRowDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -153,7 +158,8 @@ class OfferBestSeatsInPriceRangeTest {
 		List<Seat> party = Arrays.asList(partySeat);
 		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
 		BiFunction<Seat, Seat, Integer> seatsDistancer = adjacencyDistance(partySeat, adjacentSeats);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer,
+				noMiddleRowDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -187,7 +193,8 @@ class OfferBestSeatsInPriceRangeTest {
 		Collection<Seat> party = adjacencies.keySet();
 		Collection<Seat> adjacentSeats = mergedValues(adjacencies);
 		Predicate<Seat> freeSeatPredicate = seat -> !party.contains(seat);
-		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer);
+		SuggestionSystem system = new SuggestionSystem(allSeats, freeSeatPredicate, seatsDistancer,
+				noMiddleRowDistance());
 		PriceRange priceRange = new PriceRange(price, price);
 
 		// WHEN
@@ -195,6 +202,28 @@ class OfferBestSeatsInPriceRangeTest {
 
 		// THEN
 		assertEqualsUnordered(adjacentSeats, bestSeats.subList(0, adjacentSeats.size()));
+	}
+
+	@Test
+	void testReturnsSeatsNearestToMiddleOfRowWith3Seats() {
+		// GIVEN
+		Price price = Price.euros(5);
+		Seat seat1 = new Seat(price);
+		Seat seat2 = new Seat(price);
+		Seat seat3 = new Seat(price);
+		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3);
+
+		Function<Seat, Integer> middleRowDistancer = seat -> Math.abs(allSeats.indexOf(seat) - 1);
+
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+				middleRowDistancer);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
+
+		// THEN
+		assertEqualsUnordered(Arrays.asList(seat2), bestSeats.subList(0, 1));
 	}
 
 	private static Collection<Seat> mergedValues(Map<Seat, Collection<Seat>> adjacencies) {
@@ -212,6 +241,10 @@ class OfferBestSeatsInPriceRangeTest {
 
 	private static BiFunction<Seat, Seat, Integer> uncaringDistance() {
 		return (s1, s2) -> 0;
+	}
+
+	private static Function<Seat, Integer> noMiddleRowDistance() {
+		return seat -> 0;
 	}
 
 	private static List<Seat> noParty() {
@@ -348,12 +381,14 @@ class OfferBestSeatsInPriceRangeTest {
 		private final Collection<Seat> seats;
 		private final Predicate<Seat> freeSeatPredicate;
 		private final BiFunction<Seat, Seat, Integer> seatsDistancer;
+		private final Function<Seat, Integer> middleRowDistancer;
 
 		public SuggestionSystem(Collection<Seat> seats, Predicate<Seat> freeSeatPredicate,
-				BiFunction<Seat, Seat, Integer> seatsDistancer) {
+				BiFunction<Seat, Seat, Integer> seatsDistancer, Function<Seat, Integer> middleRowDistancer) {
 			this.seats = seats;
 			this.freeSeatPredicate = freeSeatPredicate;
 			this.seatsDistancer = seatsDistancer;
+			this.middleRowDistancer = middleRowDistancer;
 		}
 
 		public List<Seat> offerBestSeatsIn(PriceRange priceRange, Collection<Seat> party) {
@@ -367,7 +402,17 @@ class OfferBestSeatsInPriceRangeTest {
 			if (!party.isEmpty()) {
 				satisfyingSeats.sort(onPartyAdjacency(party));
 			}
+			satisfyingSeats.sort(onMiddleRowDistance());
+
 			return satisfyingSeats;
+		}
+
+		private Comparator<Seat> onMiddleRowDistance() {
+			return (seat1, seat2) -> {
+				int dist1 = middleRowDistancer.apply(seat1);
+				int dist2 = middleRowDistancer.apply(seat2);
+				return dist1 - dist2;
+			};
 		}
 
 		private Comparator<Seat> onPartyAdjacency(Collection<Seat> party) {
