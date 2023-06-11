@@ -358,50 +358,6 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(new HashSet<>(expected), new HashSet<>(actual));
 	}
 
-	static class Price {
-		private final int value;
-		private final Currency currency;
-
-		public Price(int value, Currency currency) {
-			this.value = value;
-			this.currency = currency;
-		}
-
-		public Price minus(int delta) {
-			return new Price(value - delta, currency);
-		}
-
-		public Price plus(int delta) {
-			return new Price(value + delta, currency);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			} else if (this instanceof Price that) {
-				return this.value == that.value//
-						&& this.currency == that.currency;
-			} else {
-				return false;
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return value * currency.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return "" + value + currency;
-		}
-
-		public static Price euros(int value) {
-			return new Price(value, Currency.EURO);
-		}
-	}
-
 	static class Seat {
 
 		private final Price price;
@@ -431,9 +387,9 @@ class OfferBestSeatsInPriceRangeTest {
 		}
 
 		public boolean includes(Price price) {
-			if (this.priceMin.currency == price.currency) {
-				return this.priceMin.value <= price.value//
-						&& this.priceMax.value >= price.value;
+			if (this.priceMin.currency() == price.currency()) {
+				return this.priceMin.value() <= price.value()//
+						&& this.priceMax.value() >= price.value();
 			} else {
 				return false;
 			}
