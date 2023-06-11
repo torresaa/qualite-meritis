@@ -27,36 +27,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class OfferBestSeatsInPriceRangeTest {
 
-	static Stream<Integer> seatsCount() {
-		return Stream.of(1, 2, 5, 10, 100);
-	}
-
-	static Stream<Object[]> seatIndexAndCount() {
-		// The index is one-based to offer a better report readability
-		return seatsCount().flatMap(count -> {
-			return Stream.of(//
-					Arrays.asList(1, count), // first seat
-					Arrays.asList((count + 1) / 2, count), // middle seat
-					Arrays.asList(count, count)// last seat
-			);
-		})//
-				.distinct()// Remove redundant cases
-				.map(List::toArray); // As Object[] to be compatible with parameterized tests
-	}
-
-	static Stream<Object[]> seatExtractAndTotal() {
-		return seatsCount().flatMap(count -> {
-			return Stream.of(//
-					Arrays.asList(0, count), // No seat
-					Arrays.asList(1, count), // One seat
-					Arrays.asList(count / 2, count), // Half of seats
-					Arrays.asList(count, count)// All seats
-			);
-		})//
-				.distinct()// Remove redundant cases
-				.map(List::toArray); // As Object[] to be compatible with parameterized tests
-	}
-
 	@Test
 	void testReturnsOnlySeatsInPriceRange() {
 		// GIVEN
@@ -82,9 +52,28 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEqualsUnordered(seatsInRange, result);
 	}
 
-	@ParameterizedTest(name = "{0} free seats in {1}")
-	@MethodSource("seatExtractAndTotal")
-	void testReturnsOnlyFreeSeats(int countFreeSeats, int countTotalSeats) {
+	static Stream<Object[]> testReturnsOnlyFreeSeats() {
+		return Stream.of(//
+				10, // Nominal case (reasonable size)
+				1, 2, 3, // Corner cases (small size)
+				10000// Corner case (big size)
+		)//
+				.flatMap(total -> {
+					return Stream.of(//
+							Arrays.asList(total, 0), // No seat free
+							Arrays.asList(total, 1), // One seat free
+							Arrays.asList(total, total / 2), // Half of seats free
+							Arrays.asList(total, total - 1), // All but one seat free
+							Arrays.asList(total, total)// All seats free
+					);
+				})//
+				.distinct()// Remove redundant cases
+				.map(List::toArray); // As Object[] to be compatible with parameterized tests
+	}
+
+	@ParameterizedTest(name = "{1} free seats in {0}")
+	@MethodSource
+	void testReturnsOnlyFreeSeats(int countTotalSeats, int countFreeSeats) {
 		// GIVEN
 		Price price = Price.euros(5);
 		List<Seat> allSeats = range(0, countTotalSeats).mapToObj(i -> new Seat(price)).toList();
