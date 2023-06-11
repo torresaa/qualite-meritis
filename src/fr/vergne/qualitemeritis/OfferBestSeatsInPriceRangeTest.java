@@ -205,15 +205,18 @@ class OfferBestSeatsInPriceRangeTest {
 	}
 
 	@Test
-	void testReturnsSeatsNearestToMiddleOfRowWith3Seats() {
+	void testReturnsSeatsNearestToMiddleOfRow() {
 		// GIVEN
 		Price price = Price.euros(5);
-		Seat seat1 = new Seat(price);
-		Seat seat2 = new Seat(price);
-		Seat seat3 = new Seat(price);
-		List<Seat> allSeats = Arrays.asList(seat1, seat2, seat3);
+		// Create a lot of seats
+		List<Seat> allSeats = range(0, 100).mapToObj(i -> new Seat(price)).collect(toList());
 
-		Function<Seat, Integer> middleRowDistancer = seat -> Math.abs(allSeats.indexOf(seat) - 1);
+		// Fix the seats distance to the middle based on their index.
+		// It totally constrains the expected result.
+		List<Seat> expected = new ArrayList<>(allSeats);
+		Function<Seat, Integer> middleRowDistancer = seat -> expected.indexOf(seat);
+		shuffle(allSeats, new Random(0));// Ensure uncorrelated order with expected result
+
 
 		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
 				middleRowDistancer);
@@ -223,7 +226,7 @@ class OfferBestSeatsInPriceRangeTest {
 		List<Seat> bestSeats = system.offerBestSeatsIn(priceRange, noParty());
 
 		// THEN
-		assertEqualsUnordered(Arrays.asList(seat2), bestSeats.subList(0, 1));
+		assertEquals(expected, bestSeats);
 	}
 
 	private static Collection<Seat> mergedValues(Map<Seat, Collection<Seat>> adjacencies) {
