@@ -66,9 +66,6 @@ public class SuggestionSystem {
 	}
 
 	private Function<Seat, Integer> distanceFrom(Collection<Seat> party) {
-		if (party.isEmpty()) {
-			throw new IllegalArgumentException("No party seat");
-		}
 		return seat -> party.stream()//
 				.mapToInt(partySeat -> seatsDistancer.apply(partySeat, seat))//
 				.min()//

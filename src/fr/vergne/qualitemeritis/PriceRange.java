@@ -11,11 +11,7 @@ public class PriceRange {
 	}
 
 	public boolean includes(Price price) {
-		if (this.priceMin.currency() == price.currency()) {
-			return this.priceMin.value() <= price.value()//
-					&& this.priceMax.value() >= price.value();
-		} else {
-			return false;
-		}
+		return this.priceMin.value() <= price.value()//
+				&& this.priceMax.value() >= price.value();
 	}
 }
