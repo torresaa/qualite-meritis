@@ -278,6 +278,29 @@ class OfferBestSeatsInPriceRangeTest {
 		assertEquals(Arrays.asList(seatCloseToParty, seatCloseToMiddle), result);
 	}
 
+	@Test
+	void testReturnsSeatCloseToMiddleOfRowOverSeatCloseToStage() {
+		// GIVEN
+		Price price = Price.euros(5);
+		Seat seatCloseToStage = new Seat(price);
+		Seat seatCloseToMiddle = new Seat(price);
+		List<Seat> allSeats = Arrays.asList(seatCloseToStage, seatCloseToMiddle);
+
+		Function<Seat, Integer> middleRowDistancer = seat -> seat.equals(seatCloseToMiddle) ? 0 : 1;
+
+		Function<Seat, Integer> stageDistancer = seat -> seat.equals(seatCloseToStage) ? 0 : 1;
+
+		SuggestionSystem system = new SuggestionSystem(allSeats, nothingBooked(), uncaringDistance(),
+				middleRowDistancer, stageDistancer);
+		PriceRange priceRange = new PriceRange(price, price);
+
+		// WHEN
+		List<Seat> result = system.offerBestSeatsIn(priceRange, noParty());
+
+		// THEN
+		assertEquals(Arrays.asList(seatCloseToMiddle, seatCloseToStage), result);
+	}
+
 	private static Collection<Seat> mergedValues(Map<Seat, Collection<Seat>> adjacencies) {
 		return adjacencies.values().stream().flatMap(Collection::stream).toList();
 	}
@@ -458,8 +481,11 @@ class OfferBestSeatsInPriceRangeTest {
 				}
 			}
 
-			satisfyingSeats.sort(onDistanceTo(party).thenComparing(onMiddleRowDistance()));
-			satisfyingSeats.sort(onStageDistance());
+			satisfyingSeats.sort(//
+					onDistanceTo(party)//
+							.thenComparing(onMiddleRowDistance())//
+							.thenComparing(onStageDistance())//
+			);
 
 			return satisfyingSeats;
 		}
